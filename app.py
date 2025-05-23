@@ -1,10 +1,9 @@
 # app.py
 
 import streamlit as st
-import yfinance as yf
-import pandas as pd
-from modules.dcf import calcular_valor_justo_dcf
-from modules.comparables import valuation_por_multiplos
+from src.dcf import calcular_valor_justo_dcf
+from src.comparables import valuation_por_multiplos
+from src.financials import buscar_dados_financeiros
 
 st.set_page_config(page_title="Valuation Pro", layout="centered")
 
@@ -14,11 +13,11 @@ st.markdown("Este app realiza o **valuation profissional** de empresas da B3 e N
 ticker_input = st.text_input("Digite o código da ação (Ex: AAPL, PETR4.SA)", value="AAPL")
 
 if ticker_input:
-    try:
-        empresa = yf.Ticker(ticker_input)
-        df_income = empresa.financials.T  # income statement
-        df_cashflow = empresa.cashflow.T  # cashflow statement
-        df_balance = empresa.balance_sheet.T
+    dados = buscar_dados_financeiros(ticker_input)
+
+    if dados:
+        df_income = dados['income']
+        df_cashflow = dados['cashflow']
 
         st.subheader("\U0001F4CA Dados Financeiros (últimos anos)")
         st.dataframe(df_income[['Total Revenue', 'Net Income']].dropna(), use_container_width=True)
@@ -47,6 +46,8 @@ if ticker_input:
         st.subheader("\U0001F4A0 Valuation por Múltiplos")
 
         try:
+            import yfinance as yf
+            empresa = yf.Ticker(ticker_input)
             pl = empresa.info.get('trailingPE', None)
             lucro_liquido = df_income['Net Income'].iloc[-1]
 
@@ -57,6 +58,5 @@ if ticker_input:
                 st.warning("Múltiplos ou lucro líquido indisponíveis.")
         except:
             st.warning("Erro ao calcular valuation por múltiplos.")
-
-    except Exception as e:
-        st.error(f"Erro ao buscar dados: {e}")
+    else:
+        st.error("Erro ao buscar os dados financeiros da empresa.")
