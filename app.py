@@ -2,6 +2,7 @@ import streamlit as st
 from src.dcf import calcular_vpl_dcf
 from src.wacc import calcular_wacc
 from src.sensitivity import analise_sensibilidade
+from src.exporter import exportar_para_excel
 import seaborn as sns
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -42,6 +43,16 @@ if st.sidebar.button("Calcular Valuation"):
             fig, ax = plt.subplots(figsize=(10, 6))
             sns.heatmap(df_sens.astype(float), annot=True, fmt=".2f", cmap="YlGnBu", ax=ax)
             st.pyplot(fig)
+
+            st.markdown("---")
+            st.subheader("⬇️ Exportar Resultados")
+            buffer = exportar_para_excel(resultado['fluxo'], df_sens, resultado['valor_justo'])
+            st.download_button(
+                label="📥 Baixar Excel",
+                data=buffer,
+                file_name=f"valuation_{ticker}.xlsx",
+                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            )
 
         except Exception as e:
             st.error(f"Erro ao calcular valuation: {e}")
