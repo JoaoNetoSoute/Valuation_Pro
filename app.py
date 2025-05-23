@@ -1,62 +1,34 @@
-# app.py
-
 import streamlit as st
-from src.dcf import calcular_valor_justo_dcf
-from src.comparables import valuation_por_multiplos
-from src.financials import buscar_dados_financeiros
+from src.dcf import calcular_vpl_dcf
+from src.wacc import calcular_wacc
 
 st.set_page_config(page_title="Valuation Pro", layout="centered")
+st.title("📊 Valuation Pro - DCF & Comparables")
 
-st.title("\U0001F4C8 Valuation Pro")
-st.markdown("Este app realiza o **valuation profissional** de empresas da B3 e NYSE usando Fluxo de Caixa Descontado (DCF) e múltiplos.")
+st.sidebar.header("🔍 Parâmetros de Avaliação")
+ticker = st.sidebar.text_input("Código da Ação (ex: AAPL, PETR4.SA)", value="AAPL")
+risk_free = st.sidebar.number_input("Taxa Livre de Risco (rf)", value=0.04)
+market_return = st.sidebar.number_input("Retorno Esperado do Mercado (rm)", value=0.10)
+desconto = st.sidebar.slider("Taxa de Desconto (%)", 5.0, 15.0, 10.0)
+crescimento_perpetuo = st.sidebar.slider("Crescimento Perpétuo (%)", 0.0, 5.0, 2.0)
+anos = st.sidebar.slider("Anos de Projeção", 3, 10, 5)
 
-ticker_input = st.text_input("Digite o código da ação (Ex: AAPL, PETR4.SA)", value="AAPL")
-
-if ticker_input:
-    dados = buscar_dados_financeiros(ticker_input)
-
-    if dados:
-        df_income = dados['income']
-        df_cashflow = dados['cashflow']
-
-        st.subheader("\U0001F4CA Dados Financeiros (últimos anos)")
-        st.dataframe(df_income[['Total Revenue', 'Net Income']].dropna(), use_container_width=True)
-
-        # === VALUATION POR DCF ===
-        st.subheader("\U0001F4B0 Valuation por DCF")
-
+if st.sidebar.button("Calcular Valuation"):
+    with st.spinner("🔄 Coletando dados e calculando..."):
         try:
-            fcf = df_cashflow['Total Cash From Operating Activities'] - df_cashflow['Capital Expenditures']
-            fcf = fcf.dropna()
-            fcf_medio = fcf.mean()
+            wacc = calcular_wacc(ticker, risk_free, market_return)
+            resultado = calcular_vpl_dcf(ticker, wacc, crescimento_perpetuo, anos)
 
-            st.write(f"FCF médio: US$ {fcf_medio:,.2f}")
+            st.subheader("💰 Resultado do Valuation DCF")
+            st.metric(label="Valor Justo por Ação (DCF)", value=f"US$ {resultado['valor_justo']:.2f}")
+            st.write(f"WACC Utilizado: **{wacc:.2%}**")
+            st.write("\n\n")
 
-            crescimento = st.slider("Taxa de crescimento anual (%)", 0.0, 20.0, 5.0) / 100
-            desconto = st.slider("Taxa de desconto (%)", 5.0, 20.0, 10.0) / 100
-            anos = st.slider("Anos de projeção", 3, 10, 5)
-
-            valor_justo_dcf = calcular_valor_justo_dcf(fcf_medio, crescimento, desconto, anos)
-            st.success(f"Valor Justo por DCF: US$ {valor_justo_dcf:,.2f}")
+            st.markdown("---")
+            st.subheader("📈 Projeções de Fluxo de Caixa")
+            st.dataframe(resultado['fluxo'])
 
         except Exception as e:
-            st.warning("Erro ao calcular DCF. Verifique se a empresa possui dados de FCF.")
-
-        # === VALUATION POR MÚLTIPLOS ===
-        st.subheader("\U0001F4A0 Valuation por Múltiplos")
-
-        try:
-            import yfinance as yf
-            empresa = yf.Ticker(ticker_input)
-            pl = empresa.info.get('trailingPE', None)
-            lucro_liquido = df_income['Net Income'].iloc[-1] if not df_income['Net Income'].isna().all() else None
-
-            if pl and lucro_liquido:
-                valor_multiplos = valuation_por_multiplos(pl, lucro_liquido)
-                st.success(f"Valor Justo por P/L: US$ {valor_multiplos:,.2f}")
-            else:
-                st.warning("Múltiplos ou lucro líquido indisponíveis.")
-        except:
-            st.warning("Erro ao calcular valuation por múltiplos.")
-    else:
-        st.error("Erro ao buscar os dados financeiros da empresa.")
+            st.error(f"Erro ao calcular valuation: {e}")
+else:
+    st.info("Insira um código de ação e clique em 'Calcular Valuation'.")
