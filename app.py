@@ -4,6 +4,7 @@ from src.wacc import calcular_wacc
 from src.sensitivity import analise_sensibilidade
 from src.exporter import exportar_para_excel
 from src.comparables import obter_multiplicadores, interpretar_multiplicadores
+from src.valuation_summary import gerar_resumo
 import seaborn as sns
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -51,6 +52,11 @@ if st.sidebar.button("Calcular Valuation"):
             st.dataframe(df_multiplos)
             interpretacao = interpretar_multiplicadores(df_multiplos)
             st.markdown(interpretacao)
+
+            st.markdown("---")
+            st.subheader("📝 Resumo do Valuation")
+            resumo = gerar_resumo(ticker, resultado['valor_justo'], wacc, crescimento_perpetuo, anos, interpretacao)
+            st.markdown(resumo)
 
             st.markdown("---")
             st.subheader("⬇️ Exportar Resultados")
