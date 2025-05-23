@@ -1,17 +1,42 @@
-def gerar_resumo(ticker, valor_justo, wacc, crescimento, anos, comparables_interp):
-    resumo = f"""
-📘 **Resumo do Valuation - {ticker.upper()}**
+import pandas as pd
+import yfinance as yf
 
-🔹 O valuation foi realizado utilizando o método do **Fluxo de Caixa Descontado (DCF)**, com um horizonte de projeção de **{anos} anos**, uma taxa de desconto (**WACC**) de **{wacc:.2%}** e uma taxa de crescimento perpétuo de **{crescimento:.2%}**.
+def gerar_resumo_valuation(ticker, valor_justo_dcf, df_multiplos=None):
+    """
+    Gera um DataFrame resumo com valor justo por DCF, por múltiplos (se disponível) e preço atual.
+    """
+    preco_atual = yf.Ticker(ticker).info.get('currentPrice', None)
 
-💵 O **valor justo por ação estimado** é de **US$ {valor_justo:.2f}**, o que serve como referência para análise de investimento com base no fluxo de caixa futuro.
+    data = {
+        "Critério": ["DCF", "Múltiplos", "Preço Atual"],
+        "Valor por Ação (USD)": [valor_justo_dcf, None, preco_atual]
+    }
 
-📊 **Múltiplos de mercado** (P/L, EV/EBITDA, etc.) também foram analisados como abordagem complementar ao DCF. Abaixo segue a interpretação dos múltiplos:
+    if df_multiplos is not None and "Valor Justo (Multiplo)" in df_multiplos.columns:
+        valor_justo_multiplo = df_multiplos["Valor Justo (Multiplo)"].mean()
+        data["Valor por Ação (USD)"][1] = valor_justo_multiplo
 
-{comparables_interp}
+    df_resumo = pd.DataFrame(data)
+    return df_resumo
 
-📈 Também foi realizada uma **análise de sensibilidade**, variando o WACC e o crescimento perpétuo, para entender como essas variáveis impactam o valor justo.
+def gerar_comparativo_valores(ticker, valor_justo_dcf, valor_justo_multiplo=None):
+    """
+    Gera DataFrame com valores de comparação visual: DCF, múltiplos (se houver) e preço atual.
+    """
+    preco_atual = yf.Ticker(ticker).info.get('currentPrice', None)
 
-🧠 Com base nesses dados, o investidor pode tomar decisões mais fundamentadas, considerando tanto o valuation absoluto (DCF) quanto relativo (múltiplos).
-"""
-    return resumo
+    dados = {
+        'Método': ['DCF'],
+        'Valor Estimado': [valor_justo_dcf]
+    }
+
+    if valor_justo_multiplo is not None:
+        dados['Método'].append('Múltiplos')
+        dados['Valor Estimado'].append(valor_justo_multiplo)
+
+    if preco_atual:
+        dados['Método'].append('Preço Atual')
+        dados['Valor Estimado'].append(preco_atual)
+
+    df = pd.DataFrame(dados)
+    return df
