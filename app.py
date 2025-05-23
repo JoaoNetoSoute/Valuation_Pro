@@ -8,7 +8,7 @@ from modules.comparables import valuation_por_multiplos
 
 st.set_page_config(page_title="Valuation Pro", layout="centered")
 
-st.title("📈 Valuation Pro")
+st.title("\U0001F4C8 Valuation Pro")
 st.markdown("Este app realiza o **valuation profissional** de empresas da B3 e NYSE usando Fluxo de Caixa Descontado (DCF) e múltiplos.")
 
 ticker_input = st.text_input("Digite o código da ação (Ex: AAPL, PETR4.SA)", value="AAPL")
@@ -20,11 +20,11 @@ if ticker_input:
         df_cashflow = empresa.cashflow.T  # cashflow statement
         df_balance = empresa.balance_sheet.T
 
-        st.subheader("📊 Dados Financeiros (últimos anos)")
+        st.subheader("\U0001F4CA Dados Financeiros (últimos anos)")
         st.dataframe(df_income[['Total Revenue', 'Net Income']].dropna(), use_container_width=True)
 
         # === VALUATION POR DCF ===
-        st.subheader("💰 Valuation por DCF")
+        st.subheader("\U0001F4B0 Valuation por DCF")
 
         try:
             fcf = df_cashflow['Total Cash From Operating Activities'] - df_cashflow['Capital Expenditures']
@@ -44,7 +44,7 @@ if ticker_input:
             st.warning("Erro ao calcular DCF. Verifique se a empresa possui dados de FCF.")
 
         # === VALUATION POR MÚLTIPLOS ===
-        st.subheader("📐 Valuation por Múltiplos")
+        st.subheader("\U0001F4A0 Valuation por Múltiplos")
 
         try:
             pl = empresa.info.get('trailingPE', None)
