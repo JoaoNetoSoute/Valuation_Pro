@@ -5,9 +5,11 @@ from src.sensitivity import analise_sensibilidade
 from src.exporter import exportar_para_excel
 from src.comparables import obter_multiplicadores, interpretar_multiplicadores
 from src.valuation_summary import gerar_resumo_valuation, gerar_comparativo_valores
+from src.pdf_report import gerar_relatorio_pdf
 import seaborn as sns
 import matplotlib.pyplot as plt
 import pandas as pd
+import tempfile
 
 st.set_page_config(page_title="Valuation Pro", layout="centered")
 st.title("📊 Valuation Pro - DCF & Comparables")
@@ -67,6 +69,10 @@ if st.sidebar.button("Calcular Valuation"):
             fig2, ax2 = plt.subplots()
             sns.barplot(data=df_comparativo, x="Método", y="Valor Estimado", palette="viridis", ax=ax2)
             ax2.set_title("Comparação de Métodos de Valuation")
+
+            # Salvar gráfico temporariamente
+            temp_img = tempfile.NamedTemporaryFile(delete=False, suffix=".png")
+            fig2.savefig(temp_img.name, format="png")
             st.pyplot(fig2)
 
             st.markdown("---")
@@ -77,6 +83,15 @@ if st.sidebar.button("Calcular Valuation"):
                 data=buffer,
                 file_name=f"valuation_{ticker}.xlsx",
                 mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            )
+
+            st.markdown("### 🧾 Gerar Relatório em PDF")
+            pdf_bytes = gerar_relatorio_pdf(ticker, resultado['valor_justo'], wacc, resultado['fluxo'], df_multiplos, temp_img.name)
+            st.download_button(
+                label="📄 Baixar PDF do Relatório",
+                data=pdf_bytes,
+                file_name=f"relatorio_valuation_{ticker}.pdf",
+                mime="application/pdf"
             )
 
         except Exception as e:
