@@ -49,7 +49,7 @@ if ticker_input:
             import yfinance as yf
             empresa = yf.Ticker(ticker_input)
             pl = empresa.info.get('trailingPE', None)
-            lucro_liquido = df_income['Net Income'].iloc[-1]
+            lucro_liquido = df_income['Net Income'].iloc[-1] if not df_income['Net Income'].isna().all() else None
 
             if pl and lucro_liquido:
                 valor_multiplos = valuation_por_multiplos(pl, lucro_liquido)
