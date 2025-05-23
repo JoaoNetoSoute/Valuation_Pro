@@ -3,6 +3,7 @@ from src.dcf import calcular_vpl_dcf
 from src.wacc import calcular_wacc
 from src.sensitivity import analise_sensibilidade
 from src.exporter import exportar_para_excel
+from src.comparables import obter_multiplicadores, interpretar_multiplicadores
 import seaborn as sns
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -43,6 +44,13 @@ if st.sidebar.button("Calcular Valuation"):
             fig, ax = plt.subplots(figsize=(10, 6))
             sns.heatmap(df_sens.astype(float), annot=True, fmt=".2f", cmap="YlGnBu", ax=ax)
             st.pyplot(fig)
+
+            st.markdown("---")
+            st.subheader("📊 Múltiplos de Mercado (Comparables)")
+            df_multiplos = obter_multiplicadores(ticker)
+            st.dataframe(df_multiplos)
+            interpretacao = interpretar_multiplicadores(df_multiplos)
+            st.markdown(interpretacao)
 
             st.markdown("---")
             st.subheader("⬇️ Exportar Resultados")
