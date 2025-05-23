@@ -4,7 +4,7 @@ from src.wacc import calcular_wacc
 from src.sensitivity import analise_sensibilidade
 from src.exporter import exportar_para_excel
 from src.comparables import obter_multiplicadores, interpretar_multiplicadores
-from src.valuation_summary import gerar_resumo
+from src.valuation_summary import gerar_resumo_valuation, gerar_comparativo_valores
 import seaborn as sns
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -54,9 +54,20 @@ if st.sidebar.button("Calcular Valuation"):
             st.markdown(interpretacao)
 
             st.markdown("---")
-            st.subheader("📝 Resumo do Valuation")
-            resumo = gerar_resumo(ticker, resultado['valor_justo'], wacc, crescimento_perpetuo, anos, interpretacao)
-            st.markdown(resumo)
+            st.subheader("📋 Resumo do Valuation")
+            df_resumo = gerar_resumo_valuation(ticker, resultado['valor_justo'], df_multiplos)
+            st.dataframe(df_resumo)
+
+            st.subheader("📊 Benchmarking Visual")
+            df_comparativo = gerar_comparativo_valores(
+                ticker,
+                resultado['valor_justo'],
+                df_multiplos["Valor Justo (Multiplo)"].mean() if "Valor Justo (Multiplo)" in df_multiplos.columns else None
+            )
+            fig2, ax2 = plt.subplots()
+            sns.barplot(data=df_comparativo, x="Método", y="Valor Estimado", palette="viridis", ax=ax2)
+            ax2.set_title("Comparação de Métodos de Valuation")
+            st.pyplot(fig2)
 
             st.markdown("---")
             st.subheader("⬇️ Exportar Resultados")
