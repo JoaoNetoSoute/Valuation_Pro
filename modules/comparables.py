@@ -17,4 +17,3 @@ def valuation_por_multiplos(preco_lucro, lucro_liquido):
     if preco_lucro <= 0 or lucro_liquido <= 0:
         return None
     return preco_lucro * lucro_liquido
-
