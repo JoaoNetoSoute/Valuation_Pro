@@ -1,6 +1,10 @@
 import streamlit as st
 from src.dcf import calcular_vpl_dcf
 from src.wacc import calcular_wacc
+from src.sensitivity import analise_sensibilidade
+import seaborn as sns
+import matplotlib.pyplot as plt
+import pandas as pd
 
 st.set_page_config(page_title="Valuation Pro", layout="centered")
 st.title("📊 Valuation Pro - DCF & Comparables")
@@ -22,11 +26,22 @@ if st.sidebar.button("Calcular Valuation"):
             st.subheader("💰 Resultado do Valuation DCF")
             st.metric(label="Valor Justo por Ação (DCF)", value=f"US$ {resultado['valor_justo']:.2f}")
             st.write(f"WACC Utilizado: **{wacc:.2%}**")
-            st.write("\n\n")
-
             st.markdown("---")
+
             st.subheader("📈 Projeções de Fluxo de Caixa")
             st.dataframe(resultado['fluxo'])
+
+            st.markdown("---")
+            st.subheader("🎯 Análise de Sensibilidade")
+            st.write("Valor justo variando a taxa de desconto (WACC) e crescimento perpétuo (g)")
+
+            df_sens = analise_sensibilidade(ticker, risk_free, market_return, anos)
+            st.dataframe(df_sens)
+
+            st.write("🔍 Mapa de Calor (Heatmap)")
+            fig, ax = plt.subplots(figsize=(10, 6))
+            sns.heatmap(df_sens.astype(float), annot=True, fmt=".2f", cmap="YlGnBu", ax=ax)
+            st.pyplot(fig)
 
         except Exception as e:
             st.error(f"Erro ao calcular valuation: {e}")
