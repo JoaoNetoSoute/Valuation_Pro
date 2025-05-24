@@ -70,7 +70,6 @@ if st.sidebar.button("Calcular Valuation"):
             sns.barplot(data=df_comparativo, x="Método", y="Valor Estimado", palette="viridis", ax=ax2)
             ax2.set_title("Comparação de Métodos de Valuation")
 
-            # Salvar gráfico temporariamente
             temp_img = tempfile.NamedTemporaryFile(delete=False, suffix=".png")
             fig2.savefig(temp_img.name, format="png")
             st.pyplot(fig2)
